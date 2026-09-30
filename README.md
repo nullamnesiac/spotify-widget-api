@@ -4,6 +4,10 @@ A small serverless API, deployed on Vercel, that returns the track I'm currently
 
 The API exists so the Spotify credentials stay on the server. The portfolio is a static site, so anything placed in its code would be public.
 
+## Preview
+
+![Spotify now-playing widget on my portfolio](assets/widget-preview.png)
+
 ## How it works
 
 1. The client calls `GET /api/now-playing`.
