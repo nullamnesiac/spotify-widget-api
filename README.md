@@ -6,7 +6,7 @@ The API exists so the Spotify credentials stay on the server. The portfolio is a
 
 ## Preview
 
-![Spotify now-playing widget on my portfolio](assets/widget-preview.png)
+![Spotify now-playing widget on my portfolio](assets/widget_preview.png)
 
 ## How it works
 
@@ -64,7 +64,7 @@ Import the repo into Vercel, set the environment variables, and deploy. The endp
 ## Security notes
 
 - Credentials are read only from environment variables, never from source code.
-- Failed Spotify requests return `{ "isPlaying": false }` with no upstream error details.
+  - Failed Spotify requests return `{ "isPlaying": false }`, and unexpected errors return a generic 500 message, with no upstream error details.
 - CORS is currently open (`Access-Control-Allow-Origin: *`) because the data is public now-playing info. It can be restricted to a single origin if needed.
 
 ## Tech
