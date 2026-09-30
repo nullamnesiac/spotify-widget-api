@@ -22,20 +22,33 @@ export default async function handler(req, res) {
     });
 
     const tokenData = await tokenResponse.json();
+
+    // DEBUG: If Spotify rejects your keys/token, tell us why
+    if (!tokenResponse.ok) {
+      return res.status(200).json({ isPlaying: false, debug: "Token fetch failed", error: tokenData });
+    }
+
     const access_token = tokenData.access_token;
 
     const spotifyResponse = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       headers: { Authorization: `Bearer ${access_token}` },
     });
 
-    if (spotifyResponse.status === 204 || spotifyResponse.status > 400) {
-      return res.status(200).json({ isPlaying: false });
+    // DEBUG: If Spotify rejects the playback request, tell us why
+    if (spotifyResponse.status > 400) {
+      const err = await spotifyResponse.text();
+      return res.status(200).json({ isPlaying: false, debug: `Spotify API rejected request (Status ${spotifyResponse.status})`, error: err });
+    }
+
+    // DEBUG: If Spotify says nothing is playing
+    if (spotifyResponse.status === 204) {
+      return res.status(200).json({ isPlaying: false, debug: "Status 204: Spotify says nothing is playing." });
     }
 
     const songData = await spotifyResponse.json();
 
     if (songData.item === null) {
-      return res.status(200).json({ isPlaying: false });
+      return res.status(200).json({ isPlaying: false, debug: "Song item is null (likely a podcast or local file)" });
     }
 
     return res.status(200).json({
@@ -47,6 +60,6 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch Spotify data' });
+    return res.status(500).json({ error: 'Failed to fetch Spotify data', details: error.message });
   }
 }
