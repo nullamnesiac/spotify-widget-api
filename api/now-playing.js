@@ -6,6 +6,17 @@ export default async function handler(req, res) {
   const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
   const refresh_token = process.env.SPOTIFY_REFRESH_TOKEN;
 
+  // DEBUG: Check if Vercel is actually loading the variables
+  if (!client_id || !client_secret || !refresh_token) {
+    return res.status(200).json({ 
+      isPlaying: false, 
+      debug: "ENVIRONMENT VARIABLES MISSING", 
+      hasClientId: !!client_id,
+      hasClientSecret: !!client_secret,
+      hasRefreshToken: !!refresh_token
+    });
+  }
+
   const basic = Buffer.from(`${client_id}:${client_secret}`).toString('base64');
 
   try {
@@ -23,7 +34,6 @@ export default async function handler(req, res) {
 
     const tokenData = await tokenResponse.json();
 
-    // DEBUG: If Spotify rejects your keys/token, tell us why
     if (!tokenResponse.ok) {
       return res.status(200).json({ isPlaying: false, debug: "Token fetch failed", error: tokenData });
     }
@@ -34,13 +44,11 @@ export default async function handler(req, res) {
       headers: { Authorization: `Bearer ${access_token}` },
     });
 
-    // DEBUG: If Spotify rejects the playback request, tell us why
     if (spotifyResponse.status > 400) {
       const err = await spotifyResponse.text();
       return res.status(200).json({ isPlaying: false, debug: `Spotify API rejected request (Status ${spotifyResponse.status})`, error: err });
     }
 
-    // DEBUG: If Spotify says nothing is playing
     if (spotifyResponse.status === 204) {
       return res.status(200).json({ isPlaying: false, debug: "Status 204: Spotify says nothing is playing." });
     }
