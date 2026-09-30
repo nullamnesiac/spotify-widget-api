@@ -15,7 +15,7 @@ The API exists so the Spotify credentials stay on the server. The portfolio is a
 3. It calls Spotify's `currently-playing` endpoint with that access token.
 4. It returns a simplified JSON response to the client.
 
-Responses are cached at the edge for 10 seconds (`Cache-Control: s-maxage=60`), so frequent polling from the widget doesn't hit Spotify on every request.
+Responses are cached at the edge for 10 seconds (`Cache-Control: s-maxage=10`), so frequent polling from the widget doesn't hit Spotify on every request, but you get the most recent stat.
 
 ## Response format
 
