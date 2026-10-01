@@ -2,7 +2,7 @@
 
 A small serverless API, deployed on Vercel, that returns the track I'm currently playing on Spotify as JSON. It powers the "Currently Listening To" widget on my portfolio: https://nullamnesiac.github.io
 
-The API exists so the Spotify credentials stay on the server. The portfolio is a static site, so anything placed in its code would be public.
+The API exists so the Spotify credentials stay on the server. My portfolio is a static site, so anything placed in the code would be public. Not quite the smartest thing to do...
 
 ## Preview
 
