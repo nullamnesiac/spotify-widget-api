@@ -1,21 +1,22 @@
 # Spotify Now Playing API
 
-A small serverless API, deployed on Vercel, that returns the track I'm currently playing on Spotify as JSON. It powers the "Currently Listening To" widget on my portfolio: https://nullamnesiac.github.io
+A small serverless API, deployed on Vercel, that returns the track I'm currently playing on Spotify as JSON, or the last track I played if nothing is playing. It powers the "Currently listening to" widget on my portfolio: https://nullamnesiac.github.io
 
-The API exists so the Spotify credentials stay on the server. My portfolio is a static site, so anything placed in the code would be public. Not quite the smartest thing to do...
+The API exists so the Spotify credentials stay on the server. The portfolio is a static site, so anything placed in its code would be public.
 
 ## Preview
 
-![Spotify now-playing widget on my portfolio](assets/widget_preview.png)
+![Spotify now-playing widget on my portfolio](assets/widget-preview.png)
 
 ## How it works
 
 1. The client calls `GET /api/now-playing`.
 2. The function exchanges a long-lived Spotify **refresh token** for a short-lived access token.
 3. It calls Spotify's `currently-playing` endpoint with that access token.
-4. It returns a simplified JSON response to the client.
+4. If nothing is playing (or the current item is a podcast or ad), it calls the `recently-played` endpoint and returns the most recent track instead.
+5. It returns a simplified JSON response to the client.
 
-Responses are cached at the edge for 10 seconds (`Cache-Control: s-maxage=10`), so frequent polling from the widget doesn't hit Spotify on every request, but you get the most recent stat.
+Responses are cached at the edge for 10 seconds (`Cache-Control: s-maxage=10`), so frequent polling from the widget doesn't hit Spotify on every request.
 
 ## Response format
 
@@ -31,7 +32,9 @@ While a track is playing:
 }
 ```
 
-When nothing is playing, or Spotify returns an error:
+When a track is paused or nothing is playing, the same fields are returned for the most recent track, with `isPlaying` set to `false`.
+
+If no track is available, or Spotify returns an error:
 
 ```json
 { "isPlaying": false }
@@ -45,7 +48,12 @@ Create an app in the [Spotify Developer Dashboard](https://developer.spotify.com
 
 ### 2. Get a refresh token
 
-Authorize your own Spotify account once using the [Authorization Code flow](https://developer.spotify.com/documentation/web-api/tutorials/code-flow) with the `user-read-currently-playing` scope. Exchange the returned code for tokens and save the **refresh token**.
+Authorize your own Spotify account once using the [Authorization Code flow](https://developer.spotify.com/documentation/web-api/tutorials/code-flow) with these scopes:
+
+- `user-read-currently-playing` for the live track
+- `user-read-recently-played` for the last-played fallback
+
+Exchange the returned code for tokens and save the **refresh token**.
 
 ### 3. Set environment variables
 
@@ -55,7 +63,7 @@ Authorize your own Spotify account once using the [Authorization Code flow](http
 | `SPOTIFY_CLIENT_SECRET` | Client secret from your Spotify app |
 | `SPOTIFY_REFRESH_TOKEN` | Refresh token from step 2 |
 
-On Vercel, add these under **Project Settings → Environment Variables**. For local development, copy `.env.example` to `.env` and fill in the values. `.env` is listed in `.gitignore` and must never be committed.
+On Vercel, add these under **Project Settings → Environment Variables**, then redeploy so they take effect. For local development, copy `.env.example` to `.env` and fill in the values. `.env` is listed in `.gitignore` and must never be committed.
 
 ### 4. Deploy
 
@@ -64,7 +72,7 @@ Import the repo into Vercel, set the environment variables, and deploy. The endp
 ## Security notes
 
 - Credentials are read only from environment variables, never from source code.
-  - Failed Spotify requests return `{ "isPlaying": false }`, and unexpected errors return a generic 500 message, with no upstream error details.
+- Spotify errors and missing configuration are logged server-side (in the Vercel logs). Callers only ever receive `{ "isPlaying": false }`, and unexpected errors return a generic 500 message, with no upstream error details.
 - CORS is currently open (`Access-Control-Allow-Origin: *`) because the data is public now-playing info. It can be restricted to a single origin if needed.
 
 ## Tech
