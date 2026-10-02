@@ -6,7 +6,7 @@ The API exists so the Spotify credentials stay on the server. The portfolio is a
 
 ## Preview
 
-![Spotify now-playing widget on my portfolio](assets/widget-preview.png)
+![Spotify now-playing widget on my portfolio](assets/widget_preview.png)
 
 ## How it works
 
