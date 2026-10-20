@@ -17,6 +17,7 @@ async function getLastPlayed(access_token) {
     artist: track.artists.map((a) => a.name).join(', '),
     albumImageUrl: track.album.images[0].url,
     songUrl: track.external_urls.spotify,
+    playedAt: data.items[0].played_at, // when this track finished playing (ISO time)
   };
 }
 
