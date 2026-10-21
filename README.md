@@ -13,7 +13,7 @@ The API exists so the Spotify credentials stay on the server. The portfolio is a
 1. The client calls `GET /api/now-playing`.
 2. The function exchanges a long-lived Spotify **refresh token** for a short-lived access token.
 3. It calls Spotify's `currently-playing` endpoint with that access token.
-4. If nothing is playing (or the current item is a podcast or ad), it calls the `recently-played` endpoint and returns the most recent track instead.
+4. If nothing is playing (or the current item is a podcast or ad), it calls the `recently-played` endpoint and returns the most recent track instead, along with the time it was played.
 5. It returns a simplified JSON response to the client.
 
 Responses are cached at the edge for 10 seconds (`Cache-Control: s-maxage=10`), so frequent polling from the widget doesn't hit Spotify on every request.
@@ -32,7 +32,22 @@ While a track is playing:
 }
 ```
 
-When a track is paused or nothing is playing, the same fields are returned for the most recent track, with `isPlaying` set to `false`.
+When nothing is playing, the same fields are returned for the most recent track, with `isPlaying` set to `false` and a `playedAt` field added:
+
+```json
+{
+  "isPlaying": false,
+  "title": "Track name",
+  "artist": "Artist One, Artist Two",
+  "albumImageUrl": "https://...",
+  "songUrl": "https://open.spotify.com/track/...",
+  "playedAt": "2026-10-20T22:14:03.512Z"
+}
+```
+
+`playedAt` is an ISO 8601 timestamp (UTC) from Spotify's `recently-played` endpoint, and marks when the track finished playing. The portfolio uses it to show how long ago I listened, in the style of phone notifications: "just now", "5 min ago", "3 hr ago" (minutes are dropped after the first hour), "yesterday", "4 days ago", and then a plain date after a week.
+
+`playedAt` is only included for last-played tracks. If a track is paused, Spotify still reports it as the current item, so it comes back with `isPlaying: false` and no `playedAt`, and the widget shows just "Last played".
 
 If no track is available, or Spotify returns an error:
 
@@ -51,7 +66,7 @@ Create an app in the [Spotify Developer Dashboard](https://developer.spotify.com
 Authorize your own Spotify account once using the [Authorization Code flow](https://developer.spotify.com/documentation/web-api/tutorials/code-flow) with these scopes:
 
 - `user-read-currently-playing` for the live track
-- `user-read-recently-played` for the last-played fallback
+- `user-read-recently-played` for the last-played fallback and its `playedAt` time
 
 Exchange the returned code for tokens and save the **refresh token**.
 
