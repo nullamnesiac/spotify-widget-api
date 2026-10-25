@@ -90,6 +90,8 @@ export default async function handler(req, res) {
       artist: songData.item.artists.map((_artist) => _artist.name).join(', '),
       albumImageUrl: songData.item.album.images[0].url,
       songUrl: songData.item.external_urls.spotify,
+      progressMs: songData.progress_ms, // how far into the song I am (milliseconds)
+      durationMs: songData.item.duration_ms, // total song length (milliseconds)
     });
   } catch (error) {
     console.error(error);
