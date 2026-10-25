@@ -65,20 +65,22 @@ If no track is available, or Spotify returns an error:
 
 ### `GET /api/lastfm`
 
-Returns my top artists, tracks and albums from Last.fm (up to five of each) for a recent period:
+Returns my top artists, tracks and albums (up to five of each) for a recent period. Last.fm decides the ranking and play counts, and Spotify supplies the links and pictures:
 
 ```json
 {
   "available": true,
   "period": "7day",
   "profileUrl": "https://www.last.fm/user/...",
-  "artists": [{ "name": "Artist", "plays": 41, "url": "https://www.last.fm/music/..." }],
-  "tracks": [{ "name": "Track", "artist": "Artist", "plays": 12, "url": "https://www.last.fm/..." }],
-  "albums": [{ "name": "Album", "artist": "Artist", "plays": 30, "url": "https://www.last.fm/..." }]
+  "artists": [{ "name": "Artist", "plays": 41, "url": "https://open.spotify.com/artist/...", "image": "https://i.scdn.co/image/..." }],
+  "tracks": [{ "name": "Track", "artist": "Artist", "plays": 12, "url": "https://open.spotify.com/track/...", "image": "https://i.scdn.co/image/..." }],
+  "albums": [{ "name": "Album", "artist": "Artist", "plays": 30, "url": "https://open.spotify.com/album/...", "image": "https://i.scdn.co/image/..." }]
 }
 ```
 
-The optional `period` query parameter accepts `7day` (default), `1month`, `3month`, `6month`, `12month` or `overall`. On any error, or if Last.fm is not configured, it returns `{ "available": false }` and the portfolio simply hides the extra tabs. Only `https://www.last.fm/` links are passed through. Responses are cached for 10 minutes (`s-maxage=600`).
+Each item is looked up through Spotify's search (using a client-credentials token, so no extra permissions are needed), and a result is only accepted if its artist name matches. If Spotify has no match or can't be reached, that item simply has no `url` or `image`, and the list still works. For tracks, `image` is the album cover.
+
+The optional `period` query parameter accepts `7day` (default), `1month`, `3month`, `6month`, `12month` or `overall`. On any error, or if Last.fm is not configured, it returns `{ "available": false }` and the portfolio simply hides the extra tabs. Only `https://open.spotify.com/` links and `https://i.scdn.co/` images are passed through. Responses are cached for 10 minutes (`s-maxage=600`).
 
 ## Setup
 
@@ -120,7 +122,7 @@ Import the repo into Vercel, set the environment variables, and deploy. The endp
 | `LASTFM_API_KEY` | API key from step 2 |
 | `LASTFM_USERNAME` | Last.fm username, as it appears in `last.fm/user/<username>` |
 
-4. Keep the function at `api/lastfm.js` and redeploy. The endpoint will be available at `https://<your-project>.vercel.app/api/lastfm`.
+4. Keep the function at `api/lastfm.js` and redeploy. It reuses `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` from step 3 to find Spotify links and pictures, so nothing else needs to be set. The endpoint will be available at `https://<your-project>.vercel.app/api/lastfm`.
 
 ## Security notes
 
