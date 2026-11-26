@@ -95,6 +95,7 @@ export default async function handler(req, res) {
   const user = process.env.LASTFM_USERNAME;
   if (!apiKey || !user) {
     console.error('Missing Last.fm environment variables', { hasApiKey: !!apiKey, hasUser: !!user });
+    res.setHeader('Cache-Control', 'no-store');   // never cache a failure, so a fix shows up right away
     return res.status(200).json({ available: false });
   }
 
@@ -141,6 +142,7 @@ export default async function handler(req, res) {
   } catch (error) {
     // Details go to the Vercel logs, not to whoever calls the API
     console.error(error);
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ available: false });
   }
 }
